@@ -33,7 +33,7 @@ browser = webdriver.Remote(
           desired_capabilities={'browserName': browser_name},
 )
 # Open Eyes         
-eyes.open(browser, "Test app", "Croc hunter test-"(browser_name), {'width': 800, 'height': 600})
+eyes.open(browser, "Test app", "Croc hunter test-{browser_name}", {'width': 800, 'height': 600})
 # Open Browser
 browser.get("https://{}".format(hostname))
 # Take snapshot
