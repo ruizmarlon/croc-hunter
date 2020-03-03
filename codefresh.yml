@@ -179,7 +179,7 @@ steps:
         - "imagePullSecrets.email=${{REPO_EMAIL}}"
         - "commit.sha=${{CF_SHORT_REVISION}}"
   
-    PushBuildInfoAndArtifactsToArtifactory:
+  PushBuildInfoAndArtifactsToArtifactory:
     title: Updating Artifactory with Codefresh Build Information and Artifacts
     type: composition
     stage: "Deploy"
