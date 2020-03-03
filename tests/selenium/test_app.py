@@ -11,7 +11,7 @@ from selenium.common.exceptions import (
     WebDriverException)
 
 # Codefresh env vars
-hostname = os.getenv('INGRESS_HOSTNAME')
+hostname = os.getenv('INGRESS_HOSTNAME_DEV')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
 
