@@ -73,7 +73,7 @@ steps:
   BuildingTestDockerImage:
     title: Building Test Docker Image
     type: build
-    stage: "Test"
+    stage: "test"
     image_name: jldeen/crochunter-tests
     working_directory: ./tests/
     dockerfile: Dockerfile
@@ -81,7 +81,7 @@ steps:
 
   Deployment_Verification_Tests:
     title: Running Selenium DVTs
-    stage: "Test"
+    stage: "test"
     type: composition
     composition:
       version: '2'
