@@ -9,6 +9,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import (
     NoSuchElementException,
     WebDriverException)
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from applitools.selenium import Eyes, Target
 
 eyes = Eyes()
@@ -33,16 +34,16 @@ def browser():
     browser.quit()
 
 
-def applitools_tests(browser):
-    eyes.open(browser, "Test app", "First test", {'width': 800, 'height': 600})
-
-    browser.get("https://{}".format(hostname))
-
+def test_applitools_tests(chrome):
+    chrome = webdriver.Remote(
+          command_executor='http://localhost:4444/wd/hub',
+          desired_capabilities=DesiredCapabilities.CHROME)
+          
+    eyes.open(chrome, "Test app", "First test", {'width': 800, 'height': 600})
+    chrome.get("https://{}".format(hostname))
     eyes.check("Login Window test", Target.window())
-
     eyes.close()
-    
-    browser.quit()
+    chrome.quit()
 
 
 def test_confirm_title(browser):
