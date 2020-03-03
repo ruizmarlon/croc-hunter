@@ -23,6 +23,16 @@ eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
 
+chrome = webdriver.Remote(
+          command_executor='http://localhost:4444/wd/hub',
+          desired_capabilities=DesiredCapabilities.CHROME)
+          
+eyes.open(chrome, "Test app", "First test", {'width': 800, 'height': 600})
+chrome.get("https://{}".format(hostname))
+eyes.check("Login Window test", Target.window())
+eyes.close()
+chrome.quit()
+
 @pytest.fixture(scope='module')
 def browser():
     browser_name = ip = os.getenv('BROWSER')
@@ -34,16 +44,8 @@ def browser():
     browser.quit()
 
 
-def test_applitools_tests(chrome):
-    chrome = webdriver.Remote(
-          command_executor='http://localhost:4444/wd/hub',
-          desired_capabilities=DesiredCapabilities.CHROME)
-          
-    eyes.open(chrome, "Test app", "First test", {'width': 800, 'height': 600})
-    chrome.get("https://{}".format(hostname))
-    eyes.check("Login Window test", Target.window())
-    eyes.close()
-    chrome.quit()
+# def test_applitools_tests(chrome):
+    
 
 
 def test_confirm_title(browser):
