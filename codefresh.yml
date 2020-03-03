@@ -54,9 +54,9 @@ steps:
     arguments:
       kube_context: jdk8s20
       chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
-      release_name: codefresh-croc
+      release_name: ${{RELEASE_NAME_DEV}}
       action: install
-      namespace: codefresh-croc-dev
+      namespace: ${{NAMESPACE_DEV}}
       helm_version: 3.0.3
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
@@ -163,9 +163,9 @@ steps:
     arguments:
       kube_context: jdk8s20
       chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
-      release_name: codefresh-croc
+      release_name: ${{RELEASE_NAME}}
       action: install
-      namespace: codefresh-croc-dev
+      namespace: ${{NAMESPACE}}
       helm_version: 3.0.3
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
