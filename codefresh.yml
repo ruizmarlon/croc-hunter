@@ -1,0 +1,231 @@
+version: "1.0"
+stages:
+  - "clone"
+  - "build"
+  - "test"
+  - "deploy"
+steps:
+  main_clone:
+    type: "git-clone"
+    description: "Cloning main repository..."
+    repo: "jldeen/croc-hunter"
+    revision: "${{CF_BRANCH}}"
+    stage: "clone"
+    
+  BuildingDockerImage:
+    title: Building Docker Image
+    type: build
+    stage: "build"
+    image_name: "jldeen/croc-hunter"
+    working_directory: ./
+    dockerfile: Dockerfile
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+    build_arguments:
+      - VCS_REF=${{CF_SHORT_REVISION}}
+
+  PushingDockerImage:
+    title: Promote to Artifactory
+    type: push
+    candidate: ${{BuildingDockerImage}}
+    image_name: jldeen/crochunter3
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+    registry: jfrog-jd-docker
+    stage: "build"
+  
+  LintHelmChart:
+    title: helm lint
+    image: devth/helm
+    commands:
+      - helm lint ./charts/croc-hunter
+    stage: "test"
+
+  PackageHelmChart:
+    title: helm package
+    image: devth/helm
+    stage: "build"
+    commands:
+      - cf_export PACKAGE=$(helm package ./charts/croc-hunter | cut -d " " -f 8)
+  
+  helmDev:
+    type: helm
+    title: Deploy with Helm3 to Dev
+    fail_fast: true
+    stage: "Testing"
+    arguments:
+      kube_context: jdk8s20
+      chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
+      release_name: codefresh-croc
+      action: install
+      namespace: codefresh-croc-dev
+      helm_version: 3.0.3
+      custom_values:
+        - "buildID=${{CF_BUILD_ID}}"
+        - replicaCount=3
+        - "ingress_hostname=${{INGRESS_HOSTNAME_DEV}}"
+        - "image=${{REPOSITORY}}"
+        - "imageTag=${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}"
+        - imagePullSecrets_username=${{REPO_USER}}
+        - imagePullSecrets_password=${{REPO_PASS}}
+        - imagePullSecrets_repository=${{REPOSITORY}}
+        - imagePullSecrets_email=${{REPO_EMAIL}}
+        - commit_sha=${{CF_SHORT_REVISION}}
+
+  BuildingTestDockerImage:
+    title: Building Test Docker Image
+    type: build
+    image_name: jldeen/crochunter-tests
+    working_directory: ./tests/
+    dockerfile: Dockerfile
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+
+  Deployment_Verification_Tests:
+    title: Running Selenium DVTs
+    type: composition
+    composition:
+      version: '2'
+      services:
+        selenium_hub:
+          image: selenium/hub:latest
+          ports:
+            - 4444
+          environment:
+            - SE_OPTS=-debug
+            - GRID_MAX_SESSION=5
+        chrome_node:
+          image: selenium/node-chrome:latest
+          ports:
+            - 5900
+            - 5555
+          command: bash -c "sleep 5 && /opt/bin/entry_point.sh"
+          depends_on: 
+            - selenium_hub
+          environment:
+            - HUB_HOST=selenium_hub
+            - REMOTE_HOST=http://chrome_node:5555
+            - NODE_MAX_SESSION=5
+            - NODE_MAX_INSTANCES=5
+        firefox_node:
+          image: selenium/node-firefox:latest
+          user: 1000:1000
+          ports:
+            - 5900
+            - 5555
+          command: bash -c "sleep 5 && /opt/bin/entry_point.sh"
+          depends_on: 
+            - selenium_hub
+          environment:
+            - HUB_HOST=selenium_hub
+            - REMOTE_HOST=http://firefox_node:5555
+            - NODE_MAX_SESSION=5
+            - NODE_MAX_INSTANCES=5
+            
+    composition_candidates:
+      test:
+        image: ${{BuildingTestDockerImage}}
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          CF_SHORT_REVISION: ${{CF_SHORT_REVISION}}
+          INGRESS_HOSTNAME: ${{INGRESS_HOSTNAME}}
+          RELEASE_NAME: ${{RELEASE_NAME}}
+        command: bash -c 'IFS=" " read -a browserarray <<< "${{BROWSERS}}" && for browser in "$${browserarray[@]}"; do BROWSER=$$browser python -m pytest -vvv --html=./${{CF_BUILD_ID}}-selenium-report-$${browser}.html --self-contained-html ./tests/selenium/test_app.py; done'
+        volumes:
+          - '${{CF_VOLUME_NAME}}:/codefresh/volume'
+    add_flow_volume_to_composition: true
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingTestDockerImage.imageId}}':
+            - SELENIUM_DVTS: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingTestDockerImage.imageId}}':
+            - SELENIUM_DVTS: false
+
+  askForPermission:
+    type: pending-approval
+    stage: "test"
+    title: Promote to QA/Prod
+
+  helmProd:
+    type: helm
+    title: Deploy with Helm3 to Prod
+    fail_fast: true
+    stage: "deploy"
+    when:
+      steps:
+        - name: askForPermission
+          on:
+            - approved
+    arguments:
+      kube_context: jdk8s20
+      chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
+      release_name: codefresh-croc
+      action: install
+      namespace: codefresh-croc-dev
+      helm_version: 3.0.3
+      custom_values:
+        - "buildID=${{CF_BUILD_ID}}"
+        - replicaCount=3
+        - "ingress_hostname=${{INGRESS_HOSTNAME}}"
+        - "image=${{REPOSITORY}}"
+        - "imageTag=${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}"
+        - imagePullSecrets_username=${{REPO_USER}}
+        - imagePullSecrets_password=${{REPO_PASS}}
+        - imagePullSecrets_repository=${{REPOSITORY}}
+        - imagePullSecrets_email=${{REPO_EMAIL}}
+        - commit_sha=${{CF_SHORT_REVISION}}
+  PushBuildInfoAndArtifactsToArtifactory:
+    title: Updating Artifactory with Codefresh Build Information and Artifacts
+    type: composition
+    composition:
+      version: '2'
+      services:
+        buildimage:
+          image: ${{BuildingDockerImage}}
+          command: sh -c "exit 0"
+    composition_candidates:
+      scan_service:
+        image: codefresh/docker-jfrog-cli-go:initial-branch-c6eeb5c
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          - JFROG_CLI_OFFER_CONFIG=false
+        command: >
+          bash -c '
+          docker login --username ${{REPO_USER}} --password "${{REPO_PASS}}" ${{REPOSITORY}} && 
+          jfrog rt build-collect-env ${{CF_REPO_NAME}} ${{CF_BUILD_ID}} && 
+          jfrog rt build-add-git ${{CF_REPO_NAME}} ${{CF_BUILD_ID}} && 
+          jfrog rt config jfrogjd --url="https://jfrogjd.jfrog.io/jfrogjd" --user=${{REPO_USER}} --password="${{REPO_PASS}}" && 
+          jfrog rt docker-push --server-id=jfrogjd --build-name=${{CF_REPO_NAME}} --build-number=${{CF_BUILD_ID}} "${{REPOSITORY}}/oscon18/crochunter:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" crochunter && 
+          jfrog rt upload --server-id=jfrogjd --build-name=${{CF_REPO_NAME}} --build-number=${{CF_BUILD_ID}} "$PACKAGE" helm-repo && 
+          jfrog rt upload --server-id=jfrogjd --build-name=${{CF_REPO_NAME}} --build-number=${{CF_BUILD_ID}} "*.html" codefresh-build-artifacts && 
+          codefresh auth create-context --api-key ${{CODEFRESH_CLI_KEY}} &&
+          jfrog rt build-publish --server-id=jfrogjd --build-url="${{CF_BUILD_URL}}" --env-exclude="*key*;*pass*;" ${{CF_REPO_NAME}} ${{CF_BUILD_ID}} |& tee publish.txt &&
+          codefresh annotate image $$(docker images -q "${{REPOSITORY}}/oscon18/crochunter:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}") 
+          --label JF_BUILD="$$(sed -n "s/^.*http/http/p" publish.txt)" &&
+          jfrog rt build-scan --server-id=jfrogjd ${{CF_REPO_NAME}} ${{CF_BUILD_ID}} | tee results.json && 
+          codefresh annotate image $$(docker images -q "${{REPOSITORY}}/oscon18/crochunter:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}") 
+          --label JF_XRAY_ALERTS="$$(jq ".summary.total_alerts" results.json)"
+          --label JF_XRAY_MSG="$$(jq ".summary.message" results.json)"
+          --label JF_XRAY_RPT="https://jfrogjd-xray.jfrog.io/web/#/component/details/docker:~2F~2Foscon18~2Fcrochunter/${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" &&
+          if [[ "$$(jq ".summary.fail_build" results.json)" = *true* ]]; then exit 1; else exit 0; fi
+          '
+        depends_on:
+          - buildimage
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /var/lib/docker:/var/lib/docker
+          - '${{CF_VOLUME_NAME}}:/codefresh/volume'
+    add_flow_volume_to_composition: true
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - JFROG_XRAY_SCAN: true
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - JFROG_XRAY_SCAN: false
+            - CF_QUALITY: false

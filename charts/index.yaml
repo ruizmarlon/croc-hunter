@@ -1,0 +1,18 @@
+apiVersion: v1
+entries:
+  croc-hunter:
+  - apiVersion: v1
+    created: "2019-09-19T14:57:47.562836-07:00"
+    description: Live out your dream hunting Crocs
+    digest: 3d059d3392a19fd58c3260d9810e567132a2ef018ab60728543b22b54f790362
+    home: https://github.com/lachie83/croc-hunter
+    maintainers:
+    - email: lachlan.evenson@gmail.com
+      name: Lachlan Evenson
+    name: croc-hunter
+    sources:
+    - https://github.com/lachie83/croc-hunter
+    urls:
+    - https://jdk8sblob.blob.core.windows.net/helm/croc-hunter-0.3.1.tgz
+    version: 0.3.1
+generated: "2019-09-19T14:57:47.562358-07:00"
