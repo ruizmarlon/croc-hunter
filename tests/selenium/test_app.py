@@ -9,11 +9,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import (
     NoSuchElementException,
     WebDriverException)
+from applitools.selenium import Eyes, Target
+
+eyes = Eyes()
 
 # Codefresh env vars
 hostname = os.getenv('INGRESS_HOSTNAME')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
+eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
@@ -26,6 +30,18 @@ def browser():
         desired_capabilities={'browserName': browser_name},
     )
     yield browser
+    browser.quit()
+
+
+def applitools_tests(browser):
+    eyes.open(browser, "Test app", "First test", {'width': 800, 'height': 600})
+
+    browser.get("https://{}".format(hostname))
+
+    eyes.check("Login Window test", Target.window())
+
+    eyes.close()
+    
     browser.quit()
 
 
