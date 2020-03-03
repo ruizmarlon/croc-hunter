@@ -73,6 +73,7 @@ steps:
   BuildingTestDockerImage:
     title: Building Test Docker Image
     type: build
+    stage: "Test"
     image_name: jldeen/crochunter-tests
     working_directory: ./tests/
     dockerfile: Dockerfile
@@ -80,6 +81,7 @@ steps:
 
   Deployment_Verification_Tests:
     title: Running Selenium DVTs
+    stage: "Test"
     type: composition
     composition:
       version: '2'
@@ -118,15 +120,16 @@ steps:
             - REMOTE_HOST=http://firefox_node:5555
             - NODE_MAX_SESSION=5
             - NODE_MAX_INSTANCES=5
-            
+
     composition_candidates:
       test:
         image: ${{BuildingTestDockerImage}}
         working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
         environment:
           CF_SHORT_REVISION: ${{CF_SHORT_REVISION}}
-          INGRESS_HOSTNAME: ${{INGRESS_HOSTNAME}}
+          INGRESS_HOSTNAME: ${{INGRESS_HOSTNAME_DEV}}
           RELEASE_NAME: ${{RELEASE_NAME}}
+          APPLI_API_KEY: ${{APPLI_API_KEY}}
         command: bash -c 'IFS=" " read -a browserarray <<< "${{BROWSERS}}" && for browser in "$${browserarray[@]}"; do BROWSER=$$browser python -m pytest -vvv --html=./${{CF_BUILD_ID}}-selenium-report-$${browser}.html --self-contained-html ./tests/selenium/test_app.py; done'
         volumes:
           - '${{CF_VOLUME_NAME}}:/codefresh/volume'
@@ -167,17 +170,19 @@ steps:
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
         - replicaCount=3
-        - "ingress_hostname=${{INGRESS_HOSTNAME}}"
+        - "ingress.hostname=${{INGRESS_HOSTNAME}}"
         - "image=${{REPOSITORY}}"
         - "imageTag=${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}"
-        - imagePullSecrets_username=${{REPO_USER}}
-        - imagePullSecrets_password=${{REPO_PASS}}
-        - imagePullSecrets_repository=${{REPOSITORY}}
-        - imagePullSecrets_email=${{REPO_EMAIL}}
-        - commit_sha=${{CF_SHORT_REVISION}}
-  PushBuildInfoAndArtifactsToArtifactory:
+        - "imagePullSecrets.username=${{REPO_USER}}"
+        - "imagePullSecrets.password=${{REPO_PASS}}"
+        - "imagePullSecrets.repository=${{REPOSITORY}}"
+        - "imagePullSecrets.email=${{REPO_EMAIL}}"
+        - "commit.sha=${{CF_SHORT_REVISION}}"
+  
+    PushBuildInfoAndArtifactsToArtifactory:
     title: Updating Artifactory with Codefresh Build Information and Artifacts
     type: composition
+    stage: "Deploy"
     composition:
       version: '2'
       services:
