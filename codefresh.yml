@@ -50,7 +50,7 @@ steps:
     type: helm
     title: Deploy with Helm3 to Dev
     fail_fast: true
-    stage: "Testing"
+    stage: "test"
     arguments:
       kube_context: jdk8s20
       chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
