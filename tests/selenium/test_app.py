@@ -23,24 +23,6 @@ eyes = Eyes()
 # Initialize the eyes SDK and set your private API key.
 eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
-# Open a Chrome browser.
-driver = webdriver.Chrome(ChromeDriverManager().install())
-
-# Start the test and set the browser's viewport size to 800x600.
-eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
-
-# Navigate the browser to the "hello world!" web-site.
-driver.get(hostname)
-
-# Visual checkpoint #1.
-eyes.check("Login Window test", Target.window())
-
-# End the test.
-eyes.close()
-
-# Close the browser.
-driver.quit()
-
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
 
@@ -54,6 +36,11 @@ def browser():
     yield browser
     browser.quit()
 
+def applitools_tests(browser):
+    eyes.open(browser, "Croc Hunter", "First test", {'width': 800, 'height': 600})
+    browser.get("https://{}".format(hostname))
+    eyes.check("Login Window test", Target.window())
+    eyes.close()
 
 def test_confirm_title(browser):
     browser.get("https://{}".format(hostname))
@@ -71,24 +58,20 @@ def test_confirm_canvas_enemy(browser):
     element = browser.find_element(By.ID, 'canvasEnemy')
     assert element.get_attribute('id') == 'canvasEnemy'
 
-
 def test_confirm_canvas_jet(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasJet')
     assert element.get_attribute('id') == 'canvasJet'
-
 
 def test_confirm_canvas_hud(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasHud')
     assert element.get_attribute('id') == 'canvasHud'
 
-
 def test_confirm_release_name(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.XPATH, '//div[@class="details"]')
     assert release_name in element.text
-
 
 def test_confirm_commit_sha(browser):
     browser.get("https://{}".format(hostname))
