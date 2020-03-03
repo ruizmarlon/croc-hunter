@@ -11,4 +11,4 @@ RUN apk update \
 
 RUN apk update && \
     apk add bash && \
-    pip install selenium pytest pytest-html eyes-selenium
+    pip install selenium pytest pytest-html webdriver-manager eyes-selenium

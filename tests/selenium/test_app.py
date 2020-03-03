@@ -9,7 +9,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import (
     NoSuchElementException,
     WebDriverException)
+
 from applitools.selenium import Eyes, Target
+from webdriver_manager.chrome import ChromeDriverManager
 
 # env vars
 hostname = os.getenv('INGRESS_HOSTNAME_DEV')
@@ -22,7 +24,7 @@ eyes = Eyes()
 eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
 # Open a Chrome browser.
-driver = webdriver.Chrome()
+driver = webdriver.Chrome(ChromeDriverManager().install())
 
 # Start the test and set the browser's viewport size to 800x600.
 eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
