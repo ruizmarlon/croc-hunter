@@ -35,6 +35,17 @@ def browser():
     yield browser
     browser.quit()
 
+def applitools_tests(browser):
+    eyes.open(browser, "Test app", "First test", {'width': 800, 'height': 600})
+
+    browser.get("https://{}".format(hostname))
+
+    eyes.check("Login Window test", Target.window())
+
+    eyes.close()
+    
+    browser.quit()
+
 def test_confirm_title(browser):
     browser.get("https://{}".format(hostname))
     assert "Croc Hunter" in browser.title
