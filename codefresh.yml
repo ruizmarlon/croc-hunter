@@ -182,7 +182,7 @@ steps:
   PushBuildInfoAndArtifactsToArtifactory:
     title: Updating Artifactory with Codefresh Build Information and Artifacts
     type: composition
-    stage: "Deploy"
+    stage: "deploy"
     composition:
       version: '2'
       services:
