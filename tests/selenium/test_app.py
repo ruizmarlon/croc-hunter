@@ -11,7 +11,6 @@ from selenium.common.exceptions import (
     WebDriverException)
 
 from applitools.selenium import Eyes, Target
-from webdriver_manager.chrome import ChromeDriverManager
 
 # env vars
 hostname = os.getenv('INGRESS_HOSTNAME_DEV')
@@ -36,22 +35,30 @@ def browser():
     yield browser
     browser.quit()
 
-def applitools_tests(browser):
-    eyes.open(browser, "Croc Hunter", "First test", {'width': 800, 'height': 600})
-    browser.get("https://{}".format(hostname))
+def applitools_tests(driver):
+    driver = webdriver.Remote(
+       command_executor='http://selenium_hub:4444/wd/hub',
+       desired_capabilities={'browserName': chrome}, 
+    )
+
+    eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
+
+    driver.get("https://{}".format(hostname))
+
     eyes.check("Login Window test", Target.window())
+
     eyes.close()
+    
+    driver.quit()
 
 def test_confirm_title(browser):
     browser.get("https://{}".format(hostname))
     assert "Croc Hunter" in browser.title
 
-
 def test_confirm_canvas_bg(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasBg')
     assert element.get_attribute('id') == 'canvasBg'
-
 
 def test_confirm_canvas_enemy(browser):
     browser.get("https://{}".format(hostname))
