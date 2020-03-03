@@ -25,20 +25,23 @@ time.sleep(15)  # TODO: figure how to do this better
 eyes = Eyes()
 # Set applitools api key
 eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
-# Set Chrome Object for Applitools
-chrome = webdriver.Remote(
+# Set Browser Object for Applitools
+browser_name = ip = os.getenv('BROWSER')
+browser = webdriver.Remote(
           command_executor='http://selenium_hub:4444/wd/hub',
-          desired_capabilities=DesiredCapabilities.CHROME)
+        #   desired_capabilities=DesiredCapabilities.CHROME
+          desired_capabilities={'browserName': browser_name},
+)
 # Open Eyes         
-eyes.open(chrome, "Test app", "Croc hunter test", {'width': 800, 'height': 600})
-# Open Chrome
-chrome.get("https://{}".format(hostname))
+eyes.open(browser, "Test app", "Croc hunter test", {'width': 800, 'height': 600})
+# Open Browser
+browser.get("https://{}".format(hostname))
 # Take snapshot
 eyes.check("Login Window test", Target.window())
 # Close Eyes
 eyes.close()
-# Quite Chrome
-chrome.quit()
+# Quite Browser
+browser.quit()
 # <-- End Applitools Visual Testing -->
 
 
