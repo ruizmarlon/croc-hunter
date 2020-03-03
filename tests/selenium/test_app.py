@@ -9,19 +9,19 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import (
     NoSuchElementException,
     WebDriverException)
-    
+from applitools.selenium import Eyes, Target
+
 # env vars
 hostname = os.getenv('INGRESS_HOSTNAME_DEV')
-appli_api_key = os.getenv('APPLI_API_KEY')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
 
-from applitools.selenium import Eyes, Target
+class HelloCrocodiles:
 
-eyes = Eyes()
+    eyes = Eyes()
 
     # Initialize the eyes SDK and set your private API key.
-    eyes.api_key = os.environ['APPLI_API_KEY']
+    eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
     try:
 
@@ -32,10 +32,10 @@ eyes = Eyes()
         eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
 
         # Navigate the browser to the "hello world!" web-site.
-        driver.get('INGRESS_HOSTNAME_DEV')
+        driver.get(hostname)
 
         # Visual checkpoint #1.
-        eyes.check("Login Window test", Target.window())
+        eyes.check("First Window test", Target.window())
 
         # End the test.
         eyes.close()
