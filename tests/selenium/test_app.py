@@ -12,27 +12,37 @@ from selenium.common.exceptions import (
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from applitools.selenium import Eyes, Target
 
-eyes = Eyes()
-
 # Codefresh env vars
 hostname = os.getenv('INGRESS_HOSTNAME')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
-eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
 
+
+# <-- Begin Applitools Visual Testing --> 
+eyes = Eyes()
+# Set applitools api key
+eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
+# Set Chrome Object for Applitools
 chrome = webdriver.Remote(
           command_executor='http://selenium_hub:4444/wd/hub',
           desired_capabilities=DesiredCapabilities.CHROME)
-          
-eyes.open(chrome, "Test app", "First test", {'width': 800, 'height': 600})
+# Open Eyes         
+eyes.open(chrome, "Test app", "Croc hunter test", {'width': 800, 'height': 600})
+# Open Chrome
 chrome.get("https://{}".format(hostname))
+# Take snapshot
 eyes.check("Login Window test", Target.window())
+# Close Eyes
 eyes.close()
+# Quite Chrome
 chrome.quit()
+# <-- End Applitools Visual Testing -->
 
+
+# <-- Begin pytest with Selenium -->
 @pytest.fixture(scope='module')
 def browser():
     browser_name = ip = os.getenv('BROWSER')
@@ -43,11 +53,7 @@ def browser():
     yield browser
     browser.quit()
 
-
-# def test_applitools_tests(chrome):
     
-
-
 def test_confirm_title(browser):
     browser.get("https://{}".format(hostname))
     assert "Croc Hunter" in browser.title
@@ -87,3 +93,4 @@ def test_confirm_commit_sha(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.XPATH, '//div[@class="details"]')
     assert commit_sha in element.text
+# <-- End pytest with Selenium -->
