@@ -3,4 +3,4 @@ FROM python:3.4-alpine
 RUN apk update && \
     apk add bash && \
     pip install selenium pytest pytest-html \
-    pip3 install eyes-selenium
+    pip install eyes-selenium
