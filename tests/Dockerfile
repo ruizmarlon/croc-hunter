@@ -1,14 +1,9 @@
 FROM python:alpine3.7
 
-# RUN apk update \
-#     && apk add --virtual build-deps gcc python3-dev musl-dev \
-#     && apk add postgresql \
-#     && apk add postgresql-dev \
-#     && pip install psycopg2 \
-#     && apk add jpeg-dev zlib-dev libjpeg g++ libxslt-dev bash \
-#     && pip install Pillow \
-#     && apk del build-deps
+# This hack is widely applied to avoid python printing issues in docker containers.
+# See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
+ENV PYTHONUNBUFFERED=1
 
 RUN apk update && \
-    apk add bash && \
-    pip install selenium pytest pytest-html
+    apk add --no-cache python3 bash jpeg-dev zlib-dev libjpeg g++ libxslt-dev && \
+    pip3 install selenium pytest pytest-html eyes-selenium
