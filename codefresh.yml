@@ -129,7 +129,7 @@ steps:
           CF_SHORT_REVISION: ${{CF_SHORT_REVISION}}
           INGRESS_HOSTNAME: ${{INGRESS_HOSTNAME_DEV}}
           RELEASE_NAME: ${{RELEASE_NAME}}
-          APPLI_API_KEY: ${{APPLI_API_KEY}}
+          APPLITOOLS_API_KEY: ${{APPLITOOLS_API_KEY}}
         command: bash -c 'IFS=" " read -a browserarray <<< "${{BROWSERS}}" && for browser in "$${browserarray[@]}"; do BROWSER=$$browser python -m pytest -vvv --html=./${{CF_BUILD_ID}}-selenium-report-$${browser}.html --self-contained-html ./tests/selenium/test_app.py; done'
         volumes:
           - '${{CF_VOLUME_NAME}}:/codefresh/volume'
