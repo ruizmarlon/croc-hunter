@@ -16,37 +16,28 @@ hostname = os.getenv('INGRESS_HOSTNAME_DEV')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
 
-class HelloCrocodiles:
+eyes = Eyes()
 
-    eyes = Eyes()
+# Initialize the eyes SDK and set your private API key.
+eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
-    # Initialize the eyes SDK and set your private API key.
-    eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
+# Open a Chrome browser.
+driver = webdriver.Chrome()
 
-    try:
+# Start the test and set the browser's viewport size to 800x600.
+eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
 
-        # Open a Chrome browser.
-        driver = webdriver.Chrome()
+# Navigate the browser to the "hello world!" web-site.
+driver.get(hostname)
 
-        # Start the test and set the browser's viewport size to 800x600.
-        eyes.open(driver, "Test app", "First test", {'width': 800, 'height': 600})
+# Visual checkpoint #1.
+eyes.check("Login Window test", Target.window())
 
-        # Navigate the browser to the "hello world!" web-site.
-        driver.get(hostname)
+# End the test.
+eyes.close()
 
-        # Visual checkpoint #1.
-        eyes.check("First Window test", Target.window())
-
-        # End the test.
-        eyes.close()
-
-    finally:
-
-        # Close the browser.
-        driver.quit()
-
-        # If the test was aborted before eyes.close was called, ends the test as aborted.
-        eyes.abort()
+# Close the browser.
+driver.quit()
 
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
