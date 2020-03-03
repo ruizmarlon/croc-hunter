@@ -10,17 +10,10 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     WebDriverException)
 
-from applitools.selenium import Eyes, Target
-
-# env vars
-hostname = os.getenv('INGRESS_HOSTNAME_DEV')
+# Codefresh env vars
+hostname = os.getenv('INGRESS_HOSTNAME')
 release_name = os.getenv('RELEASE_NAME')
 commit_sha = os.getenv('CF_SHORT_REVISION')
-
-eyes = Eyes()
-
-# Initialize the eyes SDK and set your private API key.
-eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 
 # Give Selenium Hub time to start
 time.sleep(15)  # TODO: figure how to do this better
@@ -35,45 +28,41 @@ def browser():
     yield browser
     browser.quit()
 
-def applitools_tests(browser):
-    eyes.open(browser, "Test app", "First test", {'width': 800, 'height': 600})
-
-    browser.get("https://{}".format(hostname))
-
-    eyes.check("Login Window test", Target.window())
-
-    eyes.close()
-    
-    browser.quit()
 
 def test_confirm_title(browser):
     browser.get("https://{}".format(hostname))
     assert "Croc Hunter" in browser.title
+
 
 def test_confirm_canvas_bg(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasBg')
     assert element.get_attribute('id') == 'canvasBg'
 
+
 def test_confirm_canvas_enemy(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasEnemy')
     assert element.get_attribute('id') == 'canvasEnemy'
+
 
 def test_confirm_canvas_jet(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasJet')
     assert element.get_attribute('id') == 'canvasJet'
 
+
 def test_confirm_canvas_hud(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.ID, 'canvasHud')
     assert element.get_attribute('id') == 'canvasHud'
 
+
 def test_confirm_release_name(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.XPATH, '//div[@class="details"]')
     assert release_name in element.text
+
 
 def test_confirm_commit_sha(browser):
     browser.get("https://{}".format(hostname))
