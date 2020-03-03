@@ -24,7 +24,7 @@ eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
 time.sleep(15)  # TODO: figure how to do this better
 
 chrome = webdriver.Remote(
-          command_executor='http://localhost:4444/wd/hub',
+          command_executor='http://selenium_hub:4444/wd/hub',
           desired_capabilities=DesiredCapabilities.CHROME)
           
 eyes.open(chrome, "Test app", "First test", {'width': 800, 'height': 600})
