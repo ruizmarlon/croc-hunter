@@ -40,7 +40,7 @@ browser.get("https://{}".format(hostname))
 eyes.check("Login Window test", Target.window())
 # Close Eyes
 eyes.close()
-# Quite Browser
+# Quit Browser
 browser.quit()
 # <-- End Applitools Visual Testing -->
 
