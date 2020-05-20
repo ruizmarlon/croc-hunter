@@ -58,8 +58,8 @@ steps:
       release_name: ${{RELEASE_NAME_DEV}}
       action: install
       namespace: ${{NAMESPACE_DEV}}
-      helm_version: 2.16.1
-      # helm_version: 3.1.1
+      # helm_version: 2.16.1
+      helm_version: 3.1.1
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
         - replicaCount=3
@@ -169,8 +169,8 @@ steps:
       release_name: ${{RELEASE_NAME}}
       action: install
       namespace: ${{NAMESPACE}}
-      helm_version: 2.16.1
-      # helm_version: 3.1.1
+      # helm_version: 2.16.1
+      helm_version: 3.1.1
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
         - replicaCount=3
