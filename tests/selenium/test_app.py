@@ -67,3 +67,4 @@ def test_confirm_commit_sha(browser):
     browser.get("https://{}".format(hostname))
     element = browser.find_element(By.XPATH, '//div[@class="details"]')
     assert commit_sha in element.text
+    
