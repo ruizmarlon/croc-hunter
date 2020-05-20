@@ -21,28 +21,28 @@ commit_sha = os.getenv('CF_SHORT_REVISION')
 time.sleep(15)  # TODO: figure how to do this better
 
 
-# <-- Begin Applitools Visual Testing --> 
-eyes = Eyes()
-# Set applitools api key
-eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
-# Set Browser Object for Applitools
-browser_name = ip = os.getenv('BROWSER')
-browser = webdriver.Remote(
-          command_executor='http://selenium_hub:4444/wd/hub',
-        #   desired_capabilities=DesiredCapabilities.CHROME
-          desired_capabilities={'browserName': browser_name},
-)
-# Open Eyes         
-eyes.open(browser, "Test app", "Croc hunter test", {'width': 800, 'height': 600})
-# Open Browser
-browser.get("https://{}".format(hostname))
-# Take snapshot
-eyes.check("Login Window test", Target.window())
-# Close Eyes
-eyes.close()
-# Quit Browser
-browser.quit()
-# <-- End Applitools Visual Testing -->
+# # <-- Begin Applitools Visual Testing --> 
+# eyes = Eyes()
+# # Set applitools api key
+# eyes.api_key = os.getenv('APPLITOOLS_API_KEY')
+# # Set Browser Object for Applitools
+# browser_name = ip = os.getenv('BROWSER')
+# browser = webdriver.Remote(
+#           command_executor='http://selenium_hub:4444/wd/hub',
+#         #   desired_capabilities=DesiredCapabilities.CHROME
+#           desired_capabilities={'browserName': browser_name},
+# )
+# # Open Eyes         
+# eyes.open(browser, "Test app", "Croc hunter test", {'width': 800, 'height': 600})
+# # Open Browser
+# browser.get("https://{}".format(hostname))
+# # Take snapshot
+# eyes.check("Login Window test", Target.window())
+# # Close Eyes
+# eyes.close()
+# # Quit Browser
+# browser.quit()
+# # <-- End Applitools Visual Testing -->
 
 
 # <-- Begin pytest with Selenium -->

@@ -156,6 +156,7 @@ steps:
     title: Deploy with Helm to Prod
     fail_fast: true
     stage: "deploy"
+    working_directory: ./croc-hunter
     when:
       steps:
         - name: askForPermission
@@ -163,7 +164,7 @@ steps:
             - approved
     arguments:
       kube_context: jdk8s20
-      chart_name: /codefresh/volume/croc-hunter/charts/croc-hunter
+      chart_name: charts/croc-hunter
       release_name: ${{RELEASE_NAME}}
       action: install
       namespace: ${{NAMESPACE}}
