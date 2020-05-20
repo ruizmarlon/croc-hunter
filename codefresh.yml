@@ -53,7 +53,7 @@ steps:
     stage: "test"
     arguments:
       kube_context: jdk8s20
-      chart_name: charts/croc-hunter
+      chart_name: ./charts/croc-hunter
       release_name: ${{RELEASE_NAME_DEV}}
       action: install
       namespace: ${{NAMESPACE_DEV}}
