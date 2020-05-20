@@ -48,7 +48,7 @@ steps:
   
   helmDev:
     type: helm
-    title: Deploy with Helm3 to Dev
+    title: Deploy with Helm to Dev
     fail_fast: true
     stage: "test"
     arguments:
@@ -57,7 +57,7 @@ steps:
       release_name: ${{RELEASE_NAME_DEV}}
       action: install
       namespace: ${{NAMESPACE_DEV}}
-      helm_version: 3.0.3
+      helm_version: 2.16.7
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
         - replicaCount=3
@@ -152,7 +152,7 @@ steps:
 
   helmProd:
     type: helm
-    title: Deploy with Helm3 to Prod
+    title: Deploy with Helm to Prod
     fail_fast: true
     stage: "deploy"
     when:
@@ -166,7 +166,7 @@ steps:
       release_name: ${{RELEASE_NAME}}
       action: install
       namespace: ${{NAMESPACE}}
-      helm_version: 3.0.3
+      helm_version: 2.16.7
       custom_values:
         - "buildID=${{CF_BUILD_ID}}"
         - replicaCount=3
@@ -179,73 +179,73 @@ steps:
         - "imagePullSecrets.email=${{REPO_EMAIL}}"
         - "commit.sha=${{CF_SHORT_REVISION}}"
   
-  # PushBuildInfoAndArtifactsToArtifactory:
-  #   title: Updating Artifactory with Codefresh Build Information and Artifacts
-  #   type: composition
-  #   stage: "deploy"
-  #   composition:
-  #     version: '2'
-  #     services:
-  #       buildimage:
-  #         image: ${{BuildingDockerImage}}
-  #         command: sh -c "exit 0"
-  #   composition_candidates:
-  #     scan_service:
-  #       image: jldeen/docker-jfrog-cli-java:1.0.4
-  #       working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
-  #       environment:
-  #         - JFROG_CLI_OFFER_CONFIG=false
-  #       command: >
-  #         bash -c '
-  #           docker login --username ${{JFROG_USER}} --password "${{JFROG_PASS}}" ${{REPOSITORY}} 
+  PushBuildInfoAndArtifactsToArtifactory:
+    title: Updating Artifactory with Codefresh Build Information and Artifacts
+    type: composition
+    stage: "deploy"
+    composition:
+      version: '2'
+      services:
+        buildimage:
+          image: ${{BuildingDockerImage}}
+          command: sh -c "exit 0"
+    composition_candidates:
+      scan_service:
+        image: jldeen/docker-jfrog-cli-java:1.0.4
+        working_dir: ${{CF_VOLUME_PATH}}/${{CF_REPO_NAME}}
+        environment:
+          - JFROG_CLI_OFFER_CONFIG=false
+        command: >
+          bash -c '
+            docker login --username ${{JFROG_USER}} --password "${{JFROG_PASS}}" ${{REPOSITORY}} 
           
-  #         # --- Login to Artifactory
-  #             jfrog rt config ${{JFROG_SERVER_ID}} --url=https://jfrogjd.jfrog.io/jfrogjd --user=${{JFROG_USER}} --password=${{JFROG_PASS}} --interactive=false
+          # --- Login to Artifactory
+              jfrog rt config ${{JFROG_SERVER_ID}} --url=https://jfrogjd.jfrog.io/jfrogjd --user=${{JFROG_USER}} --password=${{JFROG_PASS}} --interactive=false
 
-  #         # --- Jfrog Docker Push
-  #             jfrog rt docker-push --server-id=${{JFROG_SERVER_ID}} --build-name=${{CF_REPO_NAME}}-2020 --build-number=${{CF_BUILD_ID}} "${{REPOSITORY}}:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" docker-dev
+          # --- Jfrog Docker Push
+              jfrog rt docker-push --server-id=${{JFROG_SERVER_ID}} --build-name=${{CF_REPO_NAME}}-2020 --build-number=${{CF_BUILD_ID}} "${{REPOSITORY}}:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" docker-dev
 
-  #         # --- Upload Helm Chart Artifact to Artifactory
-  #             jfrog rt upload --build-name=${{CF_REPO_NAME}}-2020 --build-number=${{CF_BUILD_ID}} "$PACKAGE" helm-repo
+          # --- Upload Helm Chart Artifact to Artifactory
+              jfrog rt upload --build-name=${{CF_REPO_NAME}}-2020 --build-number=${{CF_BUILD_ID}} "$PACKAGE" helm-repo
 
-  #         # --- JFrog Collect Build Info to Artifactory
-  #             jfrog rt build-collect-env ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}}
+          # --- JFrog Collect Build Info to Artifactory
+              jfrog rt build-collect-env ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}}
               
-  #             jfrog rt build-add-git ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}}
+              jfrog rt build-add-git ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}}
 
-  #         # -- build publish
-  #             jfrog rt build-publish --build-url="${{CF_BUILD_URL}}" --env-exclude="*key*;*pass*;" ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}} |& tee publish.txt
+          # -- build publish
+              jfrog rt build-publish --build-url="${{CF_BUILD_URL}}" --env-exclude="*key*;*pass*;" ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}} |& tee publish.txt
 
-  #         # -- codefresh annoations
-  #             codefresh auth create-context --api-key ${{CODEFRESH_CLI_KEY}}
-  #             export JF_BUILD="$$(sed -n "s/^.*http/http/p" publish.txt)"
-  #             codefresh annotate image jldeen/chattybot:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}} --label JF_BUILD="$$(sed -n "s/^.*http/http/p" publish.txt)"'
+          # -- codefresh annoations
+              codefresh auth create-context --api-key ${{CODEFRESH_CLI_KEY}}
+              export JF_BUILD="$$(sed -n "s/^.*http/http/p" publish.txt)"
+              codefresh annotate image jldeen/chattybot:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}} --label JF_BUILD="$$(sed -n "s/^.*http/http/p" publish.txt)"'
           
-  #         # -- build scan
-  #             jfrog rt build-scan --server-id=${{JFROG_SERVER_ID}} ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}} | tee results.json
+          # -- build scan
+              jfrog rt build-scan --server-id=${{JFROG_SERVER_ID}} ${{CF_REPO_NAME}}-2020 ${{CF_BUILD_ID}} | tee results.json
 
-  #             codefresh annotate image $$(docker images -q "${{REPOSITORY}}/oscon18/crochunter:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}") 
-  #             --label JF_XRAY_ALERTS="$$(jq ".summary.total_alerts" results.json)"
-  #             --label JF_XRAY_MSG="$$(jq ".summary.message" results.json)"
-  #             --label JF_XRAY_RPT="https://jfrogjd-xray.jfrog.io/web/#/component/details/docker:~2F~2Foscon18~2Fcrochunter/${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" &&
-  #             if [[ "$$(jq ".summary.fail_build" results.json)" = *true* ]]; then exit 1; else exit 0; fi
-  #             '
-  #       depends_on:
-  #         - buildimage
-  #       volumes:
-  #         - /var/run/docker.sock:/var/run/docker.sock
-  #         - /var/lib/docker:/var/lib/docker
-  #         - '${{CF_VOLUME_NAME}}:/codefresh/volume'
-  #   add_flow_volume_to_composition: true
-  #   on_success:
-  #     metadata:
-  #       set:
-  #         - '${{BuildingDockerImage.imageId}}':
-  #           - JFROG_XRAY_SCAN: true
-  #           - CF_QUALITY: true
-  #   on_fail:
-  #     metadata:
-  #       set:
-  #         - '${{BuildingDockerImage.imageId}}':
-  #           - JFROG_XRAY_SCAN: false
-  #           - CF_QUALITY: false
+              codefresh annotate image $$(docker images -q "${{REPOSITORY}}/oscon18/crochunter:${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}") 
+              --label JF_XRAY_ALERTS="$$(jq ".summary.total_alerts" results.json)"
+              --label JF_XRAY_MSG="$$(jq ".summary.message" results.json)"
+              --label JF_XRAY_RPT="https://jfrogjd-xray.jfrog.io/web/#/component/details/docker:~2F~2Foscon18~2Fcrochunter/${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}" &&
+              if [[ "$$(jq ".summary.fail_build" results.json)" = *true* ]]; then exit 1; else exit 0; fi
+              '
+        depends_on:
+          - buildimage
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /var/lib/docker:/var/lib/docker
+          - '${{CF_VOLUME_NAME}}:/codefresh/volume'
+    add_flow_volume_to_composition: true
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - JFROG_XRAY_SCAN: true
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - JFROG_XRAY_SCAN: false
+            - CF_QUALITY: false
