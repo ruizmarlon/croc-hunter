@@ -11,7 +11,7 @@ LABEL org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.docker.dockerfile="/Dockerfile"
 
-COPY . /go/src/github.com/jldeen/croc-hunter
+COPY . /go/src/github.com/ruizmarlon/croc-hunter
 COPY static/ static/
 
 ENV GIT_SHA $VCS_REF
