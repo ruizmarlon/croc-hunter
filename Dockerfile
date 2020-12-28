@@ -16,7 +16,7 @@ COPY static/ static/
 
 ENV GIT_SHA $VCS_REF
 ENV GOPATH /go
-RUN cd $GOPATH/src/github.com/jldeen/croc-hunter && go install -v .
+RUN cd $GOPATH/src/github.com/ruizmarlon/croc-hunter && go install -v .
 
 CMD ["croc-hunter"]
 
